@@ -1,0 +1,112 @@
+#!/usr/bin/python
+####################STUFF TO CALCULATE MONTHLY VALUES########################## 
+def m(values):  
+    size = len(values)  
+    summ = 0.0  
+    for n in range(0, size):  
+        summ += values[n]  
+    return summ / size;  
+  
+# Calculate standard deviation  
+def SD(values, mean):
+    from math import sqrt  
+    size = len(values)  
+    summ = 0.0  
+    for n in range(0, size):  
+        summ += sqrt((values[n] - mean)**2)  
+    return sqrt((1.0/(size-1))*(summ/size))  
+    
+def fulllist():
+    from subprocess import Popen
+    from subprocess import PIPE
+    from glob import glob
+    arrayfield=[]
+    mean=''
+    sarlist = glob("/var/log/sa/sa[0123]*")
+    for newfile in sarlist:                                   
+        output=Popen(["sar","-r", "-f", newfile], stdout=PIPE).communicate()[0]
+        for line in output.split('\n'):
+            if line == '' or 'Average' in line or 'kb' in line or 'Linux' in line or 'RESTART' in line:  
+                pass
+            else:
+                (time,ampm,field1,field2,field3,field4,field5,field6,field7) = line.split()
+                arrayfield.append(float(field3))
+    return arrayfield
+#######################END MONTHLY CALCULATION VALUES########################
+                    
+def singlelist():
+    from datetime import datetime
+    from subprocess import Popen
+    from subprocess import PIPE
+    output=Popen(["sar","-r"], stdout=PIPE).communicate()[0]
+    date=datetime.now()
+    date=str(date).split()[0]
+    listtimeval=[]
+    for line in output.split('\n'):
+        if line == '' or 'Average' in line or 'kb' in line or 'Linux' in line or 'RESTART' in line:
+            pass
+        else:
+            (time,ampm,field1,field2,field3,field4,field5,field6,field7) = line.split()
+            listtimeval.append((time + " "+ ampm + "," + field3).split(','))
+    updatelist= [ [str(date) + " " +x[0],x[1]] for x in listtimeval]
+    return updatelist
+
+def test(val,compmath,logic):
+    for x in val:
+    print x[1]
+        print compmath
+        if logic == 'add':
+            if x[1] > compmath:
+                print "YES IT IS GREATER!!!!"
+            elif x[1] < compmath:
+                print "NO IT IS NOT!"
+        if logic == 'sub':
+            if x[1] < compmath:
+                print "Yes it is less!!!"
+            elif x[1] > compmath:
+                print "No it is not!"
+
+def dateconv(dates):
+    from datetime import datetime
+    regdates=[]
+    for x in dates:
+    type(x[0])
+        s=datetime.strptime(x[0],"%Y-%m-%d %I:%M:%S %p")
+#    print s
+        regdates.append(s)
+  #  print regdates[0]
+    return regdates
+
+def compdates(dates):
+    from datetime import datetime
+    now=datetime.now()
+   # print now
+    for x in dates:
+    #    print x
+        if x < now:
+            print x
+    
+def comp(logic,mean,x):
+    if logic == 'add':
+        compmath=mean+x
+    if logic == 'sub':
+        compmath=mean-x
+    return compmath
+        
+
+            
+
+arrayfield=fulllist()
+mean=m(arrayfield)
+#print "The Average for the month is : " + str(mean)
+x=SD(arrayfield,mean)
+#print "The Standard Deviation for the month is : "  + str(x) 
+logic='add' #determine wheather you are adding average plus sd or subtracting average minus sd
+compmath=comp(logic,mean,x) #set the compmath variable which is the value we are testing against
+print compmath
+val=singlelist()#get list of todays dates/times and values of the column
+test(val,compmath,logic) #take the list, the value we are testing against, and wheather we are adding or subtracting the compmath value to/from val
+regdates=dateconv(val)
+compdates(regdates)
+
+

@@ -1,0 +1,30 @@
+-- VERSION_3
+-- START DISKCACHE
+/mnt/.metadata/.plugins/org.eclipse.core.resources/.projects/LogicApp/com.python.pydev.analysis/v1_indexcache
+.v1_indexcache
+Logic|0|/mnt/LogicApp/Logic.py
+-- END DISKCACHE
+-- START DICTIONARY
+1
+1=Logic
+-- END DICTIONARY
+-- START TREE 1
+14
+SD|1|SD!10@
+arr|1|arrayfield!11@
+com|3|compmath!11@compdates!10@comp!10@
+dat|1|dateconv!10@
+ful|1|fulllist!10@
+log|1|logic!11@
+m|1|m!10@
+mea|1|mean!11@
+sin|1|singlelist!10@
+siz|1|size!11@
+sum|1|summ!11@
+tes|1|test!10@
+val|1|val!11@
+x|1|x!11@
+-- END TREE
+-- START TREE 2
+0
+-- END TREE

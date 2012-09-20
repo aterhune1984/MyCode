@@ -1,0 +1,87 @@
+#!/usr/bin/python
+####################STUFF TO CALCULATE MONTHLY VALUES########################## 
+def m(values):  
+    size = len(values)  
+    summ = 0.0  
+    for n in range(0, size):  
+        summ += values[n]  
+    return summ / size;  
+  
+# Calculate standard deviation  
+def SD(values, mean):
+    from math import sqrt  
+    size = len(values)  
+    summ = 0.0  
+    for n in range(0, size):  
+        summ += sqrt((values[n] - mean)**2)  
+    return sqrt((1.0/(size-1))*(summ/size))  
+    
+def fulllist():
+    from subprocess import Popen
+    from subprocess import PIPE
+    from glob import glob
+    arrayfield=[]
+    mean=''
+    sarlist = glob("/var/log/sa/sa[0123]*")
+    for newfile in sarlist:                                   
+        output=Popen(["sar","-r", "-f", newfile], stdout=PIPE).communicate()[0]
+        for line in output.split('\n'):
+            if line == '' or 'Average' in line or 'kb' in line or 'Linux' in line or 'RESTART' in line:  
+                pass
+            else:
+                (time,ampm,field1,field2,field3,field4,field5,field6,field7) = line.split()
+                arrayfield.append(float(field3))
+    return arrayfield
+#######################END MONTHLY CALCULATION VALUES########################
+                    
+def singlelist():
+    from datetime import datetime
+    from subprocess import Popen
+    from subprocess import PIPE
+    output=Popen(["sar","-r"], stdout=PIPE).communicate()[0]
+    date=datetime.now()
+    date=str(date).split()[0]
+    listtimeval=[]
+    for line in output.split('\n'):
+        if line == '' or 'Average' in line or 'kb' in line or 'Linux' in line:
+            pass
+        else:
+            (time,ampm,field1,field2,field3,field4,field5,field6,field7) = line.split()
+            listtimeval.append((time + " "+ ampm + "," + field3).split(','))
+    updatelist= [ [str(date) + " " +x[0],x[1]] for x in listtimeval]
+    return updatelist
+
+def dateconv(dates):
+    from datetime import datetime
+    regdates=[]
+    for x in dates:
+	type(x[0])
+        s=datetime.strptime(x[0],"%Y-%m-%d %I:%M:%S %p")
+	print s
+    	regdates.append(s)
+    print regdates[0]
+    return regdates
+
+def compdates(dates):
+    from datetime import datetime
+    now=datetime.now()
+    print now
+    for x in dates:
+        if x < now:
+            print x
+    
+
+
+            
+
+arrayfield=fulllist()
+mean=m(arrayfield)
+print "The Average for the month is : " + str(mean)
+x=SD(arrayfield,mean)
+print "The Standard Deviation for the month is : "  + str(x) 
+
+val=singlelist()
+regdates=dateconv(val)
+compdates(regdates)
+
+

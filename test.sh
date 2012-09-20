@@ -1,0 +1,63 @@
+#!/bin/bash
+MODDATES=$(python -c 'import os
+import subprocess
+from time import ctime
+from glob import glob
+
+
+listing = glob("/var/log/rs-sysmon/*")
+for infile in listing:    
+    print infile + " " + ctime(os.path.getmtime(infile))')
+
+
+#Standard Deviation for the month
+STDDEV=$(python -c 'import os
+import subprocess
+from time import ctime
+from glob import glob
+sarlist = glob("/var/log/sa/sa[0123]*")
+for newfile in sarlist:                                                    
+     print newfile
+     output=subprocess.Popen(["sar","-r"], stdout=subprocess.PIPE).communicate()[0]
+     print output
+'  | egrep -v "^$|Average|CPU|used|RESTART" | awk '{meansum+=$5; array[NR]=$5} \
+         END {for(x=1;x<=NR;x++){sumsq+=((array[x]-(meansum/NR))**2);}\
+              print (sqrt(sumsq/NR))+(sqrt(sumsq/NR))}')
+
+#Average of All averages for the month
+avg=$(python -c 'import os
+import subprocess
+from time import ctime
+from glob import glob
+sarlist = glob("/var/log/sa/sa[0123]*")
+for newfile in sarlist:                                                    
+     print newfile
+     output=subprocess.Popen(["sar","-r"], stdout=subprocess.PIPE).communicate()[0]
+     print output
+'  | grep Average | awk '{sum+=$4} END {print sum/NR}')
+
+#The comparing value is $ave plus standard deviation
+COMP1=$(echo \
+        $(echo $avg;\
+          echo -n " + ";\
+          echo $STDDEV)  |\
+          bc -l)
+
+sar -r -f /var/log/sa/sa`date +%d` |\
+egrep -v "^$|Average|CPU|used|RESTART" |\
+awk '{print $1 $2" "$5}' | 
+while read val; do \
+   test1=$(echo -n "$val" | awk '{printf $2" "}' ; echo "> $COMP1")
+   test2=$(echo $test1 | bc -l)
+   time=$(echo $val | awk '{print $1}')
+   if [[ ! -z "$test2" && $test2 -eq 1 ]]; then\
+      echo alert;\
+      echo $val
+      echo $(date -d $time)
+   fi;
+
+
+done
+
+
+####find /var/log/rs-sysmon/ -newermt '2012-09-16 08:10:01 PM' \! -newermt '2012-09-16 08:11:01 PM'

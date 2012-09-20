@@ -1,0 +1,53 @@
+#!/usr/bin/python
+
+class worker:
+    
+    def __init__(self):
+        pass
+    
+    def m(self, values):  
+        size = len(values)  
+        summ = 0.0  
+        for n in range(0, size):  
+            summ += values[n]  
+        return summ / size;  
+  
+# Calculate standard deviation  
+    def SD(self, values, mean):
+        from math import sqrt  
+        size = len(values)  
+        summ = 0.0  
+        for n in range(0, size):  
+            summ += sqrt((values[n] - mean)**2)  
+        return sqrt((1.0/(size-1))*(summ/size))  
+    
+    def fulllist(self):
+        from subprocess import Popen
+        from subprocess import PIPE
+        from glob import glob
+        arrayfield=''
+        sarlist = glob("/var/log/sa/sa[0123]*")
+        for newfile in sarlist:                                   
+            output=Popen(["sar","-r", "-f", newfile], stdout=PIPE).communicate()[0]
+            for line in output.split('\n'):
+                if line == '' or 'Average' in line or 'kb' in line or 'Linux' in line or 'RESTART' in line:  
+                    pass
+                else:
+                    (time,ampm,field1,field2,field3,field4,field5,field6,field7) = line.split()
+                    arrayfield.append(field3)
+        print arrayfield
+                    
+    def singlelist(self):
+        from subprocess import Popen
+        from subprocess import PIPE
+        output=Popen(["sar","-r"], stdout=PIPE).communicate()[0]
+        for line in output.split('\n'):
+            if line == '' or 'Average' in line or 'kb' in line or 'Linux' in line:
+                pass
+            else:
+                (time,ampm,field1,field2,field3,field4,field5,field6,field7) = line.split()
+                print time + " " + field3
+            
+work=worker()
+#work.singlelist()
+work.fulllist()

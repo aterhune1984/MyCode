@@ -191,28 +191,28 @@ def test(val,compmath,logic):
     for x in val:
         if logic == 'add':
             if float(x[1]) > compmath:
-                print "Value in sar for today: " + str(x[1])
-                print "Monthly Average Plus the SD: " + str(compmath)
+#                print "Value in sar for today: " + str(x[1])
+#                print "Monthly Average Plus the SD: " + str(compmath)
                 dt=datetime.strptime(x[0],"%Y-%m-%d %I:%M:%S %p")
 		edt=dt+timedelta(minutes=min_to_add)
 		bdt=dt-timedelta(minutes=min_to_sub)
                 bdt=bdt.strftime("%Y-%m-%d %I:%M:%S %p")
                 edt=edt.strftime("%Y-%m-%d %I:%M:%S %p")
-                o=popen("find /var/log/rs-sysmon/ -newermt '%s' \! -newermt '%s' 2>/dev/null" % (bdt,edt))
+                o=popen("find /var/log/rs-sysmon/ -newermt '%s' \! -newermt '%s' 2>/dev/null | grep -v '/var/log/rs-sysmon$'" % (bdt,edt))
                 for i in o.readlines():
                     files.append(i.rstrip('\n'))
             elif float(x[1]) < compmath:
                 pass
         if logic == 'sub':
             if float(x[1]) < compmath:
-                print "Value in sar for today: " + str(x[1])
-                print "Monthly Average minus the SD: " + str(compmath)
+#                print "Value in sar for today: " + str(x[1])
+#                print "Monthly Average minus the SD: " + str(compmath)
                 dt=datetime.strptime(x[0],"%Y-%m-%d %I:%M:%S %p")
 		edt=dt+timedelta(minutes=min_to_add)
 		bdt=dt-timedelta(minutes=min_to_sub)
                 bdt=bdt.strftime("%Y-%m-%d %I:%M:%S %p")
                 edt=edt.strftime("%Y-%m-%d %I:%M:%S %p")
-                o=popen("find /var/log/rs-sysmon/ -newermt '%s' \! -newermt '%s' 2>/dev/null" % (bdt,edt))
+                o=popen("find /var/log/rs-sysmon/ -newermt '%s' \! -newermt '%s' 2>/dev/null | grep -v '/var/log/rs-sysmon$'" % (bdt,edt))
                 for i in o.readlines():
                     files.append(i.rstrip('\n'))
             elif float(x[1]) > compmath:
@@ -226,6 +226,30 @@ def comp(logic,mean,x):
         compmath=mean-x-x-x-x-x
     return compmath
 
+def printfiles(files,filestoprint,grepbegin,grepend):
+    for x in files:
+        cpu=[]
+        if filestoprint in x:
+            with open(x) as f:
+                in_cpu=False
+                lineno=0
+                for line in f:
+                    line=line.strip()
+		    if lineno == 0:
+                        cpu.append(line)
+                        lineno=lineno + 1
+                    elif grepbegin in line:
+                        in_cpu=True
+                        cpu.append(line)
+                        lineno=lineno + 1
+                    elif grepend in line:
+                        lineno=lineno + 1
+                        break
+                    elif in_cpu:
+                        lineno=lineno + 1
+                        cpu.append(line)
+            for x in cpu:
+                 print x
         
 def mempercent():
     method='-r' #METHON IN SAR
@@ -241,7 +265,10 @@ def mempercent():
     compmath=comp(logic,mean,x) #set the compmath variable which is the value we are testing against
     val=singlelist(nf,method,field,time,ampm,grepv)#get list of todays dates/times and values of the column
     files=test(val,compmath,logic) #take the list, the value we are testing against, and wheather we are adding or subtracting the compmath value to/from val
-    print files
+    filestoprint='resources'
+    grepbegin='Top 10 memory using processes'
+    grepend='blahnothinthere'
+    printfiles(files,filestoprint,grepbegin,grepend)
 
 def cpuidle():
     method='-u'
@@ -257,8 +284,10 @@ def cpuidle():
     compmath=comp(logic,mean,x)
     val=singlelist(nf,method,field,time,ampm,grepv)
     files=test(val,compmath,logic)
-    print files
-
+    filestoprint='resources'
+    grepbegin='Top 10 cpu using processes'
+    grepend='Top 10 memory using processes'
+    printfiles(files,filestoprint,grepbegin,grepend)
 
 
 
